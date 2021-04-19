@@ -14,7 +14,22 @@ object factorDeCompresion {
   }
 }
 
+abstract class Permiso {
 
+}
+
+object publico : Permiso() {
+
+}
+object soloAmigos : Permiso() {
+
+}
+object privadoConPermitidos : Permiso() {
+
+}
+object publicoConExcepciones : Permiso() {
+
+}
 
 abstract class Publicacion {
 
@@ -26,13 +41,36 @@ abstract class Publicacion {
                                                      no puede dar otra vez a la misma.
                                                      La colección es de objetos de tipo "Usuario"(Dany)*/
 
+  var permisoDeAcceso : Permiso = publico /*la variable que define los permisos y se pueden cambiar cuando quieran
+  esta inicializa en publico porque ese seria el predeterminado segun yo. aunque esto lo podemos cambiar a "lateinit" para iniciarla posteriormente.
+   Al igual que la calidad de video, los permisos de acceso son objetos independientes con la clase "Permiso" heredada (Joaquin)*/
+
   abstract fun espacioQueOcupa(): Int
 
   /*Toma al objeto de tipo "Usuario" que se pone en el parámetro y lo agrega a la colección "usuariosQueLeGusto".
     Aumenta en 1 la variable "cantidadDeMeGusta". Este método complementa al método
     "darMegustaEnPublicacion(unaPublicacion)" de la clase "Usuario" (Dany)*/
-  fun recibirUnMeGustaDe(unUsusario : Usuario) { cantidadDeMeGusta += 1; usuariosQueLeGusto.add(unUsusario) }
 
+  /*En este metodo le agrege la corroboracion (puede sustiturse con un check) de que no este el usuario porque
+   por mas que sea una lista, el atributo "cantidadDeMeGusta" estaba aumentando por mas de que no se sume el
+   usuario que da me gusta (Joaquin)*/
+  fun recibirUnMeGustaDe(unUsuario : Usuario) {
+    if(!this.recibioMegustaDe(unUsuario)){
+      cantidadDeMeGusta += 1
+      usuariosQueLeGusto.add(unUsuario)
+    }
+  }
+  /*puse este metodo para poder usarlo en la clase "usuario" y asi preguntar antes de llamar el metodo
+  "recibirUnMegustaDe" y tirar el error de que el usuario ya le dio me gusta.
+  posterior a eso, el metodo "recibirUnMeGustaDe" vuelve a preguntar si este usuario ya le dio me gusta(Joaquin)*/
+  fun recibioMegustaDe(unUsuario: Usuario) = usuariosQueLeGusto.contains(unUsuario)
+
+  fun cambiarAcceso(accesoNuevo : Permiso) { this.permisoDeAcceso = accesoNuevo }
+
+}
+
+class Texto(val contenido: String) : Publicacion() {
+  override fun espacioQueOcupa() = contenido.length
 }
 
 class Foto(val alto: Int, val ancho: Int) : Publicacion() {
@@ -41,12 +79,11 @@ class Foto(val alto: Int, val ancho: Int) : Publicacion() {
     con un atributo que define su valor y un método para modificarlo en cualquier momento.
     También modifiqué el método "espacioQueOcupa()" par que se adapte al uso del objeto. (Dany)*/
   override fun espacioQueOcupa() = ceil(alto * ancho * factorDeCompresion.valor).toInt()
-}
 
-
-
-class Texto(val contenido: String) : Publicacion() {
-  override fun espacioQueOcupa() = contenido.length
+  /* Agregue la funcion para cambiar el factor de compresion desde la foto. y asi cuando se decida cambiar
+    se realice directamente desde la instancia y que el valor de compresion (hasta ahora) aplica solo a las
+    fotos, cualquier cosa lo cambiamos (Joaquin) */
+  fun cambiarFactorDeCompresion(nuevoValor : Double) { factorDeCompresion.cambiarValorDeFactor(nuevoValor) }
 }
 
 
@@ -66,8 +103,11 @@ object sd : Calidad(){
 object hd720p : Calidad(){
   override fun calcularEspacio(duracion: Int) = duracion * 3 //El triple de los segundos de duración
 }
-object fullHd1080p : Calidad() {
-  override fun calcularEspacio(duracion: Int) = (duracion * 3) * 2 //El doble del triple de los segundos de duración
+object hd1080p : Calidad() {
+  /*decidi cambiarlo porque el enunciado dice "Hace lo mismo que el hd720 y lo multiplica por 2".
+    puede ser que la calidad 720p cambie la manera de calcular, si eso pasara tendriamos que
+    cambiar la manera de calcular aca tambien*/
+  override fun calcularEspacio(duracion: Int) = hd720p.calcularEspacio(duracion) * 2
 }
 //*****************************************************************
 
