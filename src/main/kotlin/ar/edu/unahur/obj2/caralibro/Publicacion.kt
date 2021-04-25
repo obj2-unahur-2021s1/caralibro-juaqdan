@@ -14,24 +14,49 @@ object factorDeCompresion {
   }
 }
 
-abstract class Permiso {
 
+//*****************************************Permisos********************************************
+
+
+/*Implementé los permisos como objetos e hice que sea su responsabilidad determinar si un usuario
+  puede ver una publicación o no, otorgándole un método que, mediante dos parámetros los cuales el primero es
+  una publicación y el otro es un usuario, define sie es verdadero o falso dependiendo de los requisitos de
+  cada objeto. Este se relacionará con el método "puedeSeVistaPor(unUsuario: Usuario)"
+  de la clase "Publicacion" (ver en esa clase). (Dany)*/
+abstract class Permiso {
+    abstract fun publicacion_puedeSeVistaPor(unapublicacion: Publicacion,unUsuario: Usuario) : Boolean
 }
 
 object publico : Permiso() {
-
+  /*Todos las publicaciones publicas pueden se vistas por cualquiera, por lo tanto siempre sevuelve "true". (Dany)*/
+  override fun publicacion_puedeSeVistaPor(unapublicacion: Publicacion,unUsuario: Usuario) = true
 }
 object soloAmigos : Permiso() {
-
+  /*En este permiso, solo aquellos que sean amigos de quien hizo la publicación podrán verla, entonces, se necesita
+    identificar quien la publicó. Para esto las publicaciones ahora tienen un nuevo atributo "usuariosQueLaPublico"
+    el cual es el usuario que las publicó (ver en la clase "Publicacion"). Así con el uso del método
+    "esAmigoDe(unUsuario)" de los usuarios podemos verificar si el usuario qu publicó la publicación
+    es amigo de un usuario dado. (Dany)*/
+  override fun publicacion_puedeSeVistaPor(unapublicacion: Publicacion,unUsuario: Usuario) =
+    unapublicacion.usuariosQueLaPublico.esAmigoDe(unUsuario)
 }
 object privadoConPermitidos : Permiso() {
-
+  /*Se agrega a los Usuarios una lista "listaDePermitidos" que entre sus amigos elige cuales pueden ver ciertas
+    publicaciones. Solo aquellos usuarios que estén dentro de la lista pueden ver la publicación.(Dany)*/
+  override fun publicacion_puedeSeVistaPor(unapublicacion: Publicacion,unUsuario: Usuario) =
+    (unapublicacion.usuariosQueLaPublico).listaDePermitidos.contains(unUsuario)
 }
 object publicoConExcepciones : Permiso() {
-
+  /*Se agrega a los Usuarios una lista "listaDeExcluidos" que entre sus amigos elige cuales no pueden ver ciertas
+    publicaciones. Solo aquellos usuarios que no estén dentro de esta lista podrán ver la publicación.(Dany)*/
+  override fun publicacion_puedeSeVistaPor(unapublicacion: Publicacion,unUsuario: Usuario) =
+    !(unapublicacion.usuariosQueLaPublico).listaDeExcluidos.contains(unUsuario)
 }
+//*******************************************************************************
 
 abstract class Publicacion {
+
+  abstract var usuariosQueLaPublico: Usuario //Indica el usuario que publicó esta publicación.(Dany)
 
   var cantidadDeMeGusta : Int = 0 /*Es la cantidad de MG que recibe una publicación,
                                     se inicia siempre en 0 y es una variable porque puede aumentar (Dany)*/
@@ -41,9 +66,12 @@ abstract class Publicacion {
                                                      no puede dar otra vez a la misma.
                                                      La colección es de objetos de tipo "Usuario"(Dany)*/
 
+
   var permisoDeAcceso : Permiso = publico /*la variable que define los permisos y se pueden cambiar cuando quieran
   esta inicializa en publico porque ese seria el predeterminado segun yo. aunque esto lo podemos cambiar a "lateinit" para iniciarla posteriormente.
    Al igual que la calidad de video, los permisos de acceso son objetos independientes con la clase "Permiso" heredada (Joaquin)*/
+
+
 
   abstract fun espacioQueOcupa(): Int
 
@@ -67,13 +95,22 @@ abstract class Publicacion {
 
   fun cambiarAcceso(accesoNuevo : Permiso) { this.permisoDeAcceso = accesoNuevo }
 
+  /*Este método modifica quien publicó esta publicación.(Dany)*/
+  fun publicarsePor(unUsuario: Usuario) {
+    usuariosQueLaPublico = unUsuario
+  }
+
+  /*Dependiendo de que tipo de permiso tenga la publicación, se definirá con distintas condiciones (ver permisos)
+   si el usuario dado puede verla o no. (Dany)*/
+  fun puedeSeVistaPor(unUsuario: Usuario) = permisoDeAcceso.publicacion_puedeSeVistaPor(this, unUsuario)
+
 }
 
-class Texto(val contenido: String) : Publicacion() {
+class Texto(val contenido: String, override var usuariosQueLaPublico : Usuario) : Publicacion() {
   override fun espacioQueOcupa() = contenido.length
 }
 
-class Foto(val alto: Int, val ancho: Int) : Publicacion() {
+class Foto(val alto: Int, val ancho: Int, override var usuariosQueLaPublico : Usuario) : Publicacion() {
 
   /*Quité la variable "factorDeCompresion" porque creé el objeto "factorDeCompresion"
     con un atributo que define su valor y un método para modificarlo en cualquier momento.
@@ -111,7 +148,7 @@ object hd1080p : Calidad() {
 }
 //*****************************************************************
 
-class Video(val duracion : Int, val calidad : Calidad) : Publicacion() {
+class Video(val duracion : Int, val calidad : Calidad, override var usuariosQueLaPublico : Usuario) : Publicacion() {
   override fun espacioQueOcupa() = calidad.calcularEspacio(duracion)
 }
 
