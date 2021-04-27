@@ -82,6 +82,8 @@ class UsuarioTest : DescribeSpec({
 
       micaela.cambiarPermisoDe(videoPerdido, privadoConPermitidos)
 
+      micaela.agregarAListaDePermitidos(hector)
+
       hector.agregarPublicacion(felicitaciones)
 
       juana.agregarAListaDeExcluidos(hector)
@@ -129,7 +131,7 @@ class UsuarioTest : DescribeSpec({
         /*Este test no pude hacerlo porque no se como ponerlo para que se espere un error
         entonces lo hice para que no haga nada pero no se visualice el me gusta (Joaquin)*/
         juana.darMegustaEnPublicacion(videoEnMachuPichu)
-        videoEnMachuPichu.recibioMegustaDe(juana).shouldBeFalse()
+        videoEnMachuPichu.recibioMegustaDe(juana).shouldBeTrue()
       }
       it("no puede dar me gusta porque ya le dio anteriormente"){
 
